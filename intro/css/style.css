@@ -1,3 +1,6 @@
+/*
+ * INTRO1
+ */
 .chart rect {
   fill: steelblue;
 }
@@ -6,4 +9,12 @@
   fill: white;
   font: 10px sans-serif;
   text-anchor: end;
+}
+
+
+/*
+ * INTRO2
+ */
+text {
+  font: 10px sans-serif;
 }
