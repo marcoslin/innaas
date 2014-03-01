@@ -244,6 +244,8 @@
             .text(function(d) {
                 return formatHKD (d.value);
             });
+        
+        // Define bubbles
         var gHeadsCircles = svg.selectAll("circle")
             .data(nodes)
         .enter().append("circle")
@@ -254,32 +256,39 @@
             .attr("id", function(d, i) {
                 return "head-circle-" + d.key.substr(1,4);
             });
+        
+        // Initial transition up to the final value
         gHeadsCircles
             .transition(4000)
             .delay(500)
             .attr("r", function(d, i) {
                 return Math.sqrt(d.value) * coefHKD;
             });
+        
         gHeadsCircles
             .on("click", headClick)
             .on("mouseover", headMouseOver)
             .on("mouseout", headMouseOut);
+        
+        /* OnClick function to get the detail page */
         function headClick (d, i) {
             var headid = d.key.substr(1,4);
             if (headid.length < 3) headid = "0" + headid;
             window.open("http://www.budget.gov.hk/2013/eng/pdf/head" + headid + ".pdf");
         }
+        // OnMouseHover bubble effect
         function headMouseOver (d, i) {
             d3.select("#heads-under-text-" + d.key.substr(1,4)).style("display", "block");
             d3.select("#heads-under-text-" + d.key.substr(1,4)).style("opacity", 1)
             d3.select("#head-circle-" + d.key.substr(1,4)).style("stroke-width", 4);
         }
+        // OnMouseOut bubble effect
         function headMouseOut (d, i) {
             d3.selectAll(".heads-under-text").style("display", "none");
             d3.selectAll(".heads-under-text").style("opacity", 0);
             d3.selectAll(".head-circle").style("stroke-width", 1);
         }
-
+        
         function valueSort (alpha) {
             /*if (rowHeight == 0) {
                 rowHeight = Math.sqrt(d.value) * coefHKD + marginBalls * 4;
@@ -315,7 +324,8 @@
                 d.y += (rowNb * 100 * coef + incr - 160) * (alpha);
             };
         };
-
+        
+        // Generic random function
         function randomize () {
             return function (d) {
                 var targetX = width / 2;
@@ -324,7 +334,8 @@
                 d.y += (targetY - d.y) * 0.1;
             }
         }
-
+        
+        // First layout (massime bubble)
         function totalLayout () {
             force
                 .gravity(10)
@@ -347,6 +358,8 @@
                 .attr("cy", function(d) { return d.y + 20; });
             }).start();
         }
+        
+        // Ordered layout (ordered bubbles)
         function orderedLayout () {
             force
                 .gravity(1)
@@ -358,9 +371,13 @@
                 .attr("cy", function(d) { return d.y + 20; });
             }).start();
         }
+        
+        // Setup layout of the bubbles
         totalLayout();
         //orderedLayout();
         //setTimeout(orderedLayout, 2000);
+        
+        // Button OnClick to change view
         d3.select("#sorting")
             .on("click", function (e) {
                 if (d3.select("#sorting").attr("class").indexOf("selected")>=0) {
@@ -371,7 +388,8 @@
                     orderedLayout();
                 }
             });
-
+        
+        // Hide loading bar at the end of the load
         d3.select("#loadingbar").style("display", "none");
     }
 })();
