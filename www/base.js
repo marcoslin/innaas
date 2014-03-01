@@ -1,10 +1,11 @@
 (function() {
-
+    
+    // Load the main variables that controls the canvas
     var width = 1200;
     var height = 540;
     var minYear = 2006;
     var maxYear = 2013;
-
+    
     var coefTotalExpHKD = 1 / (Math.PI * 100);
     var coefHKD = 1 / (Math.PI * 25);
 
@@ -12,19 +13,23 @@
     var marginBalls = 8;
 
     var roundedFormat = d3.format("0.2f");
-
+    
+    // Initial animation of the bubbles
     var init = true;
     var initDuration = 2000, normalDuration = 2000;
-
+    
+    // Design the canvas
     var svg = d3.select("#g").append("svg")
 	.attr("width", width)
 	.attr("height", height);
-
+    
+    // Load external data from CSV
     queue()
         .defer(d3.csv, "budget.expenditures.csv")
         .defer(d3.csv, "budget.heads.csv")
         .await(ready);
-
+    
+    // Load data in the canvas
     function ready(error, exp, heads) {
 
         /* Getters */
@@ -102,6 +107,7 @@
                 }
             }
         });
+        
         /* Reformat by actual applicable fiscal year */
         var expyear = [];
         for (var y=minYear-2; y<=maxYear; y++) {
