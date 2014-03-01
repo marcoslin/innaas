@@ -9,12 +9,15 @@
     var minYear = 2006;
     var maxYear = 2013;
     
+    // Radius
     var coefTotalExpHKD = 1 / (Math.PI * 100);
     var coefHKD = 1 / (Math.PI * 25);
     
+    // Margin calculation starting from the total years to analyze
     var marginX = width / (maxYear - minYear + 2) / 2;
     var marginBalls = 8;
-
+    
+    // Number format of the data
     var roundedFormat = d3.format("0.2f");
     
     // Initial animation of the bubbles
@@ -35,7 +38,7 @@
     // Load data in the canvas
     function ready(error, exp, heads) {
 
-        /* Getters */
+        /* Getters - DEAD CODE */
         function getExpObjFromName (name) {
             for (var i=0; i<exp.length; i++) {
                 if (exp[i].name == name) return exp[i];
@@ -55,37 +58,44 @@
             return null;
         }
 
-        /* Functional functions */
+        /* Get the most relevant budget between actual, revised and estimate value */
         function getMostRelevant (d) {
+            // return d.actual || d.revised || d.estimate;
             if (d.actual !== undefined) return d.actual;
             else if (d.revised !== undefined) return d.revised;
             else return d.estimate;
         }
+        
+        // Calculate buble readius from value
         function radiusFromValue (val) {
             return Math.sqrt(val / Math.PI);
         }
-        function formatHKD (hkd) {
+        
+        // Format Currency starting from values
+        function formatCurrency (value) {
             // start with values in thousands
-            if (hkd < 1000) {
+            if (value < 1000) {
                 suffix = ",000";
                 divider = 1;
             }
-            else if (hkd < 1000000) {
+            else if (value < 1000000) {
                 suffix = " million";
                 divider = 1000;
             }
-            else if (hkd < 1000000000) {
+            else if (value < 1000000000) {
                 suffix = " billion";
                 divider = 1000000;
             }
-            else if (hkd < 1000000000000) {
+            else if (value < 1000000000000) {
                 suffix = " trillion";
                 divider = 1000000000;
             }
-            return "$" + roundedFormat(hkd / divider) + suffix;
+            return "$" + roundedFormat(value / divider) + suffix;
         }
 
         /* Define scales of the bubble */
+        // domain are the number
+        // range is the screen width 
         var xfunc = d3.scale.linear()
             .domain([minYear-2, maxYear])
             .range([marginX, 1280-marginX]);
@@ -111,7 +121,7 @@
             }
         });
         
-        /* Reformat by actual applicable fiscal year */
+        /* Reformat data from data array 1 */
         var expyear = [];
         for (var y=minYear-2; y<=maxYear; y++) {
             if (y+2 == minYear) expyear.push({"year":y, "actual":{}});
@@ -120,6 +130,7 @@
             else if (y == maxYear) expyear.push({"year":y, "estimate":{}});
             else expyear.push({"year":y, "actual":{}, "approved":{}, "revised":{}, "estimate":{}});
         }
+        /* Reformat data from data array 2 */
         for (var i=0; i<exp.length; i++) { // each head
             for (var y=minYear; y<=maxYear; y++) { // each year
                 if (exp[i]["head"] == 184) continue;
@@ -130,6 +141,7 @@
                 expyear[index]["estimate"][String(exp[i]["head"])] = exp[i]["estimate"+y];
             }
         }
+        /* Reformat data from data array 3 */
         for (var y=minYear; y<=maxYear; y++) { // each year
             index = y-minYear+2;
             expyear[index-2]["actual"]["year"] = y;
@@ -148,11 +160,12 @@
 
         /* Show totals per year */
         var gYearsContainer = svg.append("g")
-            .attr("class", "year-container");
+            .attr("class", "year-container"); //1 g
         var gYears = gYearsContainer.selectAll("g")
             .data(expyear)
-        .append("g")
+            .append("g") // 
             .attr("transform", function(d,i) {return "translate("+xfunc(d.year)+",100)";});
+        
         gYears.append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
@@ -176,8 +189,11 @@
         headData.remove("year");
         headData.remove("type");
         headData.remove("total_expenditures");
-
+        
         /* Add some force */
+        // Gravity pushes the bubbles at the center of the canvas
+        // Frictions is velocity delay
+        // Charges how nodes are attracted each other
         var nodes = d3.entries(headData).sort(function(a,b) { return b.value - a.value;})
         var force = d3.layout.force()
             .gravity(0.8)
@@ -186,7 +202,8 @@
             .nodes(nodes)
             .size([width, height]);
         force.start();
-
+        
+        // Create container of the information
         var gHeadsContainer = svg.append("g")
             .attr("class", "head-container");
         cumulWidth = 0;
@@ -198,28 +215,7 @@
         .enter().append("g")
             .attr("transform", function (d,i) {
                 return "translate("+(width/2)+",10)";
-            })
-            /*.attr("transform", function(d,i) {
-                if (rowHeight == 0) {
-                    rowHeight = Math.sqrt(d.value) * coefHKD + marginBalls * 4;
-                    rowWidth = Math.sqrt(d.value) * coefHKD + marginBalls * 2;
-                }
-                var w = cumulWidth + rowWidth;
-                var h = cumulRow + Math.sqrt(d.value) * coefHKD;// + rowHeight;
-                cumulWidth += Math.sqrt(d.value) * coefHKD * 2 + marginBalls;
-                if ((cumulWidth + Math.sqrt(d.value) * coefHKD + marginBalls) > width) {
-                    cumulRow += rowHeight * 1.9;
-                    rowHeight = Math.sqrt(d.value) * coefHKD + marginBalls * 4;
-                    rowWidth = Math.sqrt(d.value) * coefHKD + marginBalls * 2;
-                    cumulWidth = 0;
-                    w = cumulWidth + rowWidth;
-                    h = cumulRow + Math.sqrt(d.value) * coefHKD;// + rowHeight;
-                    cumulWidth += Math.sqrt(d.value) * coefHKD * 2 + marginBalls;
-                }
-                //return "translate("+(w)+","+(h)+")";
-                //return 'translate('+width/2+', '+height/2+')';
-                return "";
-            })*/;
+            });
         var tblocks = gHeads.append("text")
             .attr("x", 0)
             .attr("y", function(d, i) {
@@ -242,7 +238,7 @@
             .attr("x", 0)
             .attr("dy", marginBalls * 2)
             .text(function(d) {
-                return formatHKD (d.value);
+                return formatCurrency (d.value);
             });
         
         // Define bubbles
@@ -265,6 +261,7 @@
                 return Math.sqrt(d.value) * coefHKD;
             });
         
+        // Property definition of each bubble
         gHeadsCircles
             .on("click", headClick)
             .on("mouseover", headMouseOver)
@@ -289,31 +286,20 @@
             d3.selectAll(".head-circle").style("stroke-width", 1);
         }
         
+        // Function called to order the bubbles
         function valueSort (alpha) {
-            /*if (rowHeight == 0) {
-                rowHeight = Math.sqrt(d.value) * coefHKD + marginBalls * 4;
-                rowWidth = Math.sqrt(d.value) * coefHKD + marginBalls * 2;
-            }
-            var w = cumulWidth + rowWidth;
-            var h = cumulRow + Math.sqrt(d.value) * coefHKD;// + rowHeight;
-            cumulWidth += Math.sqrt(d.value) * coefHKD * 2 + marginBalls;
-            if ((cumulWidth + Math.sqrt(d.value) * coefHKD + marginBalls) > width) {
-                cumulRow += rowHeight * 1.9;
-                rowHeight = Math.sqrt(d.value) * coefHKD + marginBalls * 4;
-                rowWidth = Math.sqrt(d.value) * coefHKD + marginBalls * 2;
-                cumulWidth = 0;
-                w = cumulWidth + rowWidth;
-                h = cumulRow + Math.sqrt(d.value) * coefHKD;// + rowHeight;
-                cumulWidth += Math.sqrt(d.value) * coefHKD * 2 + marginBalls;
-            }*/
-            //return "translate("+(w)+","+(h)+")";
-            //return 'translate('+width/2+', '+height/2+')';
+            
+            // Ordering the bubble after the sort button is clicked
             return function(d) {
-                d.x += ((d.index % 12) * 90 - 500) * (alpha);
-                var maxRows = 7;
+                
+                var columns = 12;
+                
+                d.x += ((d.index % columns) * 90 - 500) * (alpha);
+                
                 var coef = 1;
                 var incr = 0;
-                var rowNb = Math.floor(d.index / 12);
+                var rowNb = Math.floor(d.index / columns);
+                
                 if (rowNb > 2) {
                     coef = 0.5;
                     incr = 60;
@@ -321,11 +307,13 @@
                     coef = 0.8;
                     incr = 0;
                 }
+                
                 d.y += (rowNb * 100 * coef + incr - 160) * (alpha);
+                
             };
         };
         
-        // Generic random function
+        // Function that put the bubble in the center of the screen each tick
         function randomize () {
             return function (d) {
                 var targetX = width / 2;
@@ -336,7 +324,10 @@
         }
         
         // First layout (massime bubble)
+        
         function totalLayout () {
+            
+            // Generate the effect that centralize bubbles in the center of the canvas
             force
                 .gravity(10)
                 .friction(0.6)
@@ -347,16 +338,21 @@
                     .attr("cy", function(d) { return d.y + 20; });
                 })
                 .start();
+            
             for (var i=0; i<100; i++) force.tick();
+            
             force.stop();
+
             force
-                .gravity(0.6)
-                .friction(0.2)
+                .gravity(0.6) //0.6
+                .friction(0.2) // 0.2
             .on("tick", function(e){
                 svg.selectAll("circle")
+                
                 .attr("cx", function(d) { return d.x; })
                 .attr("cy", function(d) { return d.y + 20; });
-            }).start();
+            }).start(); 
+            
         }
         
         // Ordered layout (ordered bubbles)
@@ -374,8 +370,6 @@
         
         // Setup layout of the bubbles
         totalLayout();
-        //orderedLayout();
-        //setTimeout(orderedLayout, 2000);
         
         // Button OnClick to change view
         d3.select("#sorting")
