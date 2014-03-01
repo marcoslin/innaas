@@ -1,0 +1,106 @@
+body {
+    font-family: "Open Sans", sans-serif;
+    margin: 5px;
+    padding: 5px;
+    width: 1200px;
+}
+h1 {
+    font-weight: normal;
+    font-family: "ChunkFiveRegular", times, "Times New Roman", serif;
+    margin: 5px 0 0;
+    padding: 0;
+}
+h2 {
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+    font-size: 1.2em;
+}
+a {
+    color: #000;
+}
+#datasource {
+    margin: 5px 0 10px;
+    padding: 0;
+    font-size: 0.8em;
+    font-style: italic;
+}
+#intro {
+    width: 100%;
+    margin: 5px 0 10px;
+    padding: 0;
+    font-size: 0.8em;
+}
+#logo-jmsc {
+    float: right;
+}
+div#g-tooltip {
+    width: 300px;
+    opacity: 0;
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #999;
+    padding: 15px;
+    text-align:center;
+}
+a.button {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333; 
+}
+a:hover.button,
+a:hover.button.selected {
+    color: #FFF; 
+    background-color: #666;
+}
+a.button.selected {
+    color: #FFF; 
+    background-color: #000;
+}
+div#footer {
+    clear:both;
+    margin: 20px 0 0 0;
+    padding: 10px 0 0;
+    border-top: 1px solid #DDDDDD;
+    font-size: 0.75em;
+}
+.djl {
+    font-family: "ChunkFiveRegular", times, "Times New Roman", serif;
+    font-size: 3em;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    vertical-align: top;
+}
+text {
+    font-family: "ChunkFiveRegular", times, "Times New Roman", serif;
+    font-size: 1em;
+    text-anchor: middle;
+}
+text.heads-under-text {
+    display: none;
+    font-family: "Open Sans", sans-serif;
+    opacity: 0;
+    font-size: 0.9em;
+}
+tspan {
+    font-weight: bold;
+    text-anchor: middle;
+}
+tspan.currency-text {
+    font-size: 1.2em;
+}
+circle {
+    stroke: #000;
+    fill: #FFF;
+}
+circle.head-circle:hover {
+    cursor: pointer;
+}
+.byline {
+    display: none;
+}

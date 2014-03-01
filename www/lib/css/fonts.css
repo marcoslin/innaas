@@ -1,0 +1,11 @@
+/*
+ *  * @vendor:     The League of Moveable Type
+ *   * @vendorurl:  http://www.theleagueofmoveabletype.com
+ *    * @licenseurl: http://www.fontsquirrel.com/license/ChunkFive
+ *     */
+
+@font-face {
+    font-family: ChunkFiveRegular;
+    src: url('../fonts/Chunkfive.eot');
+    src: local('ChunkFive Regular'), local('ChunkFive'), url('../fonts/Chunkfive.ttf') format('truetype');
+}
