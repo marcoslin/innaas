@@ -1,14 +1,17 @@
 (function() {
     
-    // Load the main variables that controls the canvas
+    /* Load the main variables */
+    // Canvas size
     var width = 1200;
     var height = 540;
+    
+    // Predefined settings configuration of the year of expenditure
     var minYear = 2006;
     var maxYear = 2013;
     
     var coefTotalExpHKD = 1 / (Math.PI * 100);
     var coefHKD = 1 / (Math.PI * 25);
-
+    
     var marginX = width / (maxYear - minYear + 2) / 2;
     var marginBalls = 8;
 
@@ -18,7 +21,7 @@
     var init = true;
     var initDuration = 2000, normalDuration = 2000;
     
-    // Design the canvas
+    // Design the SVG canvas on the #g div defined in the HTML
     var svg = d3.select("#g").append("svg")
 	.attr("width", width)
 	.attr("height", height);
@@ -82,7 +85,7 @@
             return "$" + roundedFormat(hkd / divider) + suffix;
         }
 
-        /* Define scales */
+        /* Define scales of the bubble */
         var xfunc = d3.scale.linear()
             .domain([minYear-2, maxYear])
             .range([marginX, 1280-marginX]);
