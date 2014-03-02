@@ -289,7 +289,6 @@
         // Function called to order the bubbles
         function valueSort (alpha) {
             
-            // Ordering the bubble after the sort button is clicked
             return function(d) {
                 
                 var columns = 12;
