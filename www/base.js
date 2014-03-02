@@ -360,7 +360,7 @@
         }
         
         // Ordered layout (ordered bubbles)
-        function orderedLayout () {
+        function orderedLayout (fastSorting) {
             force
                 .gravity(1)
                 .friction(0);
@@ -371,14 +371,18 @@
                 .attr("cy", function(d) { return d.y + 20; });
             }).start();
             
-            for (var i=0; i<100; i++) force.tick();
+            if (fastSorting == true) {
             
-            force.stop(); 
+                for (var i=0; i<10; i++) force.tick();
+
+                force.stop(); 
+                
+            }
             
         }
         
         // Order the bubbles
-        orderedLayout();
+        orderedLayout(true);
         
         // Then aggregate them in the final layout
         totalLayout();
@@ -391,7 +395,7 @@
                     totalLayout();
                 } else {
                     d3.select("#sorting").attr("class", d3.select("#sorting").attr("class") + " selected");
-                    orderedLayout();
+                    orderedLayout(false);
                 }
             });
         
