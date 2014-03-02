@@ -1,4 +1,25 @@
 /*
+ * WORLDCUP
+ */
+circle.team {
+    stroke: white;
+    stroke-width: 2px;
+}
+
+circle.team:hover {
+    stroke: #ffbc03;
+    stroke-width: 5px;
+}
+
+#team_flags {
+    position: relative;
+}
+
+.flagsp {
+    position: absolute;
+}
+
+/*
  * INTRO1
  */
 .chart rect {

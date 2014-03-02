@@ -1,10 +1,10 @@
-var app = angular.module("d3jsapp");
+angular.module("d3jsapp")
 
 
 /**
  * INTRO1
  */
-app.controller('Intro1Controller', ['$scope', '$log', function ($scope, $log) {
+.controller('Intro1Controller', ['$scope', '$log', function ($scope, $log) {
     
     // Define data
     var init_data = [
@@ -72,12 +72,13 @@ app.controller('Intro1Controller', ['$scope', '$log', function ($scope, $log) {
     
     updateChart(init_data);
 
-}]);
+}])
+
 
 /**
  * INTRO2
  */
-app.controller('Intro2Controller', ['$scope', '$log', function ($scope, $log) {
+.controller('Intro2Controller', ['$scope', '$log', function ($scope, $log) {
     var diameter = 800,
         format = d3.format(",d"),
         color = d3.scale.category20c();
@@ -88,7 +89,7 @@ app.controller('Intro2Controller', ['$scope', '$log', function ($scope, $log) {
         .size([diameter, diameter])
         .padding(1.5);
     
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(".chart")
         .attr("width", diameter)
         .attr("height", diameter)
         .attr("class", "bubble");
