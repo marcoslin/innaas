@@ -289,6 +289,7 @@
         // Function called to order the bubbles
         function valueSort (alpha) {
             
+            // Ordering the bubble after that the sort button is clicked
             return function(d) {
                 
                 var columns = 12;
@@ -321,12 +322,15 @@
                 d.y += (targetY - d.y) * 0.1;
             }
         }
-        
+
         // First layout (massime bubble)
         
         function totalLayout () {
             
+            
+            /*
             // Generate the effect that centralize bubbles in the center of the canvas
+            // This effect was used in order to mix the bubbles
             force
                 .gravity(10)
                 .friction(0.6)
@@ -340,16 +344,17 @@
             
             for (var i=0; i<100; i++) force.tick();
             
-            force.stop();
+            force.stop(); */
+            
+            var that = this;
 
             force
                 .gravity(0.6) //0.6
                 .friction(0.2) // 0.2
             .on("tick", function(e){
                 svg.selectAll("circle")
-                
-                .attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y + 20; });
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
             }).start(); 
             
         }
@@ -365,9 +370,17 @@
                 .attr("cx", function(d) { return d.x; })
                 .attr("cy", function(d) { return d.y + 20; });
             }).start();
+            
+            for (var i=0; i<100; i++) force.tick();
+            
+            force.stop(); 
+            
         }
         
-        // Setup layout of the bubbles
+        // Order the bubbles
+        orderedLayout();
+        
+        // Then aggregate them in the final layout
         totalLayout();
         
         // Button OnClick to change view
