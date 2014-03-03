@@ -5,7 +5,7 @@ angular.module("d3jsapp")
     var circle_canvas_width = 950,  // From style.css
         circle_canvas_height = 550, // From style.css
         color = d3.scale.category10(),
-        team_data;
+        team_data, team_group_data = [];
     
     Team.then(function (data) {
         $log.debug("[WorldcupController] team data loaded");
@@ -13,7 +13,9 @@ angular.module("d3jsapp")
         team_data = data;
         
         // Create data for displaying team flag
-        var team_flag_data = [];
+        var team_flag_data = [],
+            team_groups = {};
+        
         angular.forEach(data, function (d) {
             team_flag_data.push({
                 team_name: d.team_name,
@@ -21,9 +23,15 @@ angular.module("d3jsapp")
                 team_idclass: d.team_idclass,
                 circle_idclass: d.circle_idclass,
                 flag_class: d.flag_class
-            }); 
+            });
+            // Create team data
+            if ( !team_groups[d.team_group] ) {
+                team_groups[d.team_group] = true;
+            }
         });
-        
+        team_group_data = d3.keys(team_groups);
+                
+        // Start drawing
         drawTeams(team_flag_data);
         drawAxis();
         drawCircle(data);
