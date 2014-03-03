@@ -38,7 +38,7 @@ angular.module("d3jsapp")
         
         // Default Layout
         Layout.flagGrid();
-        $scope.circleForce();
+        Layout.circleForce();
 
         //$scope.showAxis();
         $log.debug("[WorldcupController] draw completed");
@@ -48,12 +48,7 @@ angular.module("d3jsapp")
      * EXPOSE Layout
      */
     $scope.flagGrid = Layout.flagGrid;
-    $scope.circleForce = function () {
-        $scope.disable_axisLayout = true;
-        Layout.circleForce().then(function () {
-            $scope.disable_axisLayout = false;
-        });
-    };
+    $scope.circleForce = Layout.circleForce;
     $scope.circleXY = Layout.circleXY;
     
     

@@ -202,6 +202,7 @@
         }
         
         this.circleForce = function () {
+            // Returns a promise that will resolve when force animation finishes
             var d = $q.defer(),
                 circles = d3.select("#circle-group").selectAll("circle");
             
@@ -234,7 +235,7 @@
             expandCircle(circles, priv_force);
             
             var inter = $interval(function () {
-                $log.debug("[Layout] .circleForce waiting for force animation to complete with alpha of: ", priv_force.alpha());
+                // $log.debug("[Layout] .circleForce waiting for force animation to complete with alpha of: ", priv_force.alpha());
                 if (priv_force.alpha() === 0) {
                     $interval.cancel(inter);
                     inter = undefined;
@@ -265,6 +266,12 @@
             var circles = d3.select("#circle-group").selectAll("circle"),
                 x = priv_scaleGroup,
                 y = priv_scaleRankRel;
+            
+            // Stop force animation if still in progress
+            if (priv_force.alpha() !== 0) {
+                priv_force.stop();
+            }
+
             displayAxis(true);
             
             circles
