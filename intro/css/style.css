@@ -1,6 +1,13 @@
 /*
  * WORLDCUP
  */
+
+#container {
+    width: 950px;
+    height: 600px;
+    border: 1px solid #CCC;
+}
+
 circle.team {
     stroke: white;
     stroke-width: 2px;
@@ -8,12 +15,20 @@ circle.team {
 
 circle.team.highlight,
 circle.team:hover {
-    stroke: #ffe203;
-    stroke-width: 5px;
+    stroke: #fff503;
+    stroke-width: 8px;
 }
 
-#team-flags {
+
+#flag-canvas {
     position: relative;
+    height: 50px;
+    width: 100%;
+}
+
+#circle-canvas {
+    height: 550px;
+    width: 100%;
 }
 
 .team {
@@ -28,6 +43,21 @@ circle.team:hover {
     line-height: 90%;
 }
 
+.axis path,
+.axis line {
+    fill: none;
+}
+.axis text {
+    display: none;
+}
+
+.axis.show path,
+.axis.show line {
+    stroke: #fff;
+}
+.axis.show text {
+    display: inherit;
+}
 
 /*
  * INTRO1
