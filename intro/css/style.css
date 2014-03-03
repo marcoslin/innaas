@@ -6,18 +6,28 @@ circle.team {
     stroke-width: 2px;
 }
 
+circle.team.highlight,
 circle.team:hover {
-    stroke: #ffbc03;
+    stroke: #ffe203;
     stroke-width: 5px;
 }
 
-#team_flags {
+#team-flags {
     position: relative;
 }
 
-.flagsp {
+.team {
     position: absolute;
+    display: inline-block;
 }
+
+.team .team-code {
+    font-family: "Arial Black", Gadget, sans-serif;
+    vertical-align: middle;
+    font-size: 13px;
+    line-height: 90%;
+}
+
 
 /*
  * INTRO1

@@ -12,7 +12,7 @@ angular.module("d3jsapp")
     Team.then(function (data) {
         $log.debug("[WorldcupController] team data loaded");
         // $scope.teams = data;
-        drawFlags(data);
+        drawTeams(data);
         drawCircle(data);
         $log.debug("[WorldcupController] draw completed");
     })
@@ -55,36 +55,76 @@ angular.module("d3jsapp")
         
     }
     
-    var flag_orig = {};
-    function drawFlags(data) {
-        var flags = [];
-        angular.forEach(data, function (d) {
-            flags.push({ team_name: d.team_name, flag_class: d.flag_class }); 
-        });
+    var team_orig_position = {};
+    function teamMouseOver(d, i) {
+        var idclass = d.circle_idclass,
+            circle = d3.select("#" + idclass);
+        circle.classed("highlight", true);
         
+    }
+    function teamMouseOut(d, i) {
+        var idclass = d.circle_idclass,
+            circle = d3.select("#" + idclass);
+        circle.classed("highlight", false);
+    }
+    function drawTeams(data) {
+        /*
+        <div class="team">
+            <span class="flagsp flagsp_civ"></span>
+            <span class="team-code">CIV</span>
+        </div>
+        */
+        
+        var flags = [];
+        
+        // Create a copy
+        angular.forEach(data, function (d) {
+            flags.push({
+                team_name: d.team_name,
+                team_code: d.fifa_code.toUpperCase(),
+                team_idclass: d.team_idclass,
+                circle_idclass: d.circle_idclass,
+                flag_class: d.flag_class
+            }); 
+        });
         var grid = d3.layout.grid()
             .bands()
             .nodeSize([4, 8])
-            .rows(1)
-            .cols(32)
-            .padding([22, 17]);
+            .rows(2)
+            .cols(16)
+            .padding([55, 17]);
         
-        var flagNodes = grid(flags);
+        var flagNodes = grid(flags),
+            team_flags = d3.select("#team-flags"),
+            team_flag = team_flags
+                .selectAll("div")
+                .data(flagNodes)
+                .enter()
+                .append("div")
+                .attr("class", "team")
+                .attr("title", function (d) { return d.team_name; })
+                .attr("id", function (d) { return d.team_idclass; })
+                .attr("style", function (d) {
+                    var pos = "top: " + d.y + "px; left: " + d.x + "px;"
+                    // Store original position
+                    team_orig_position[d.team_idclass] = pos;
+                    return pos;
+                })
+                .on("mouseover", teamMouseOver)
+                .on("mouseout", teamMouseOut)
+        ;
         
-        var team_flags = d3.select("#team_flags");
-        
-        team_flags
-            .selectAll("span")
-            .data(flagNodes)
-            .enter()
-            .append("div")
+        team_flag
+            .append("span")
             .attr("class", function (d) {
                 return "flagsp " + d.flag_class;
-            })
-            .attr("style", function (d) {
-                var pos = "top: " + d.y + "px; left: " + d.x + "px;";
-                flag_orig[d.flag_class] = pos;
-                return pos;
+            });
+        
+        team_flag
+            .append("span")
+            .attr("class", "team-code")
+            .text(function (d) {
+                return d.team_code;
             })
         ;
         
@@ -92,29 +132,27 @@ angular.module("d3jsapp")
     
     
     // OnMouseHover bubble effect
-    
     function circleMouseOver (d, i) {
-        var flag = d3.select("." + d.flag_class),
-            circle = d3.select(this);
-        flag
+        var id_name = d.team_idclass,
+            circle = d3.select(this),
+            x = circle.attr("cx"),
+            y = circle.attr("cy");
+        
+        d3.select("#" + id_name)
             .transition()
             .duration(500)
-            .attr("style", "top: " + circle.attr("cy") + "px; left: " + circle.attr("cx") + "px;");
+            .attr("style", "top: " + y + "px; left: " + x + "px;");
     }
     // OnMouseOut bubble effect
     function circleMouseOut (d, i) {
-        var flag_class = d.flag_class,
-            flag = d3.select("." + flag_class);
-        flag
+        var id_name = d.team_idclass;
+        
+        d3.select("#" + id_name)
             .transition()
             .duration(500)
-            .attr("style", flag_orig[flag_class]);
-        
+            .attr("style", team_orig_position[id_name]);
     }
-    
-    
-    
-    
+
     function drawCircle(data) {
         var maxRanking = d3.max(data, function (d) { return d.fifa_rank }),
             rankingX = d3.scale.linear()
@@ -146,6 +184,7 @@ angular.module("d3jsapp")
                 // return Math.sqrt(rankingX(d.fifa_rank)/Math.PI)
                 return rankingX(d.fifa_rank)
             })
+            .attr("id", function (d) { return d.circle_idclass; })
             .attr("class", "team")
             .attr("fill", function (d) {
                 return color(d.team_group);
