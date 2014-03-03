@@ -5,7 +5,9 @@ angular.module("d3jsapp")
     var circle_canvas_width = 950,  // From style.css
         circle_canvas_height = 550, // From style.css
         color = d3.scale.category10(),
-        team_data, team_group_data = [];
+        team_data, team_group_data = [],
+        max_fifa_rank_rel = 0, min_fifa_rank_rel = 0,
+        circles;
     
     Team.then(function (data) {
         $log.debug("[WorldcupController] team data loaded");
@@ -28,6 +30,10 @@ angular.module("d3jsapp")
             if ( !team_groups[d.team_group] ) {
                 team_groups[d.team_group] = true;
             }
+            // Set min/max fifa_rank_rel
+            if (d.fifa_rank_rel > max_fifa_rank_rel) max_fifa_rank_rel = d.fifa_rank_rel;
+            if (d.fifa_rank_rel < min_fifa_rank_rel) min_fifa_rank_rel = d.fifa_rank_rel;
+            
         });
         team_group_data = d3.keys(team_groups);
                 
@@ -35,6 +41,7 @@ angular.module("d3jsapp")
         drawTeams(team_flag_data);
         drawAxis();
         drawCircle(data);
+        //$scope.showAxis();
         $log.debug("[WorldcupController] draw completed");
     })
     
@@ -176,8 +183,11 @@ angular.module("d3jsapp")
             .size([circle_canvas_width, circle_canvas_height]);
         force.start();
 
-        var team_chart = d3.select("#team-chart").append("g"),
-            circles = team_chart.selectAll("circle");
+        var team_chart = d3.select("#team-chart")
+            .append("g")
+            .attr("id", "circles");
+        
+        circles = team_chart.selectAll("circle");
 
         circles
             .data(data)
@@ -209,11 +219,39 @@ angular.module("d3jsapp")
     /** 
      * AXIS Section
      */
-    var priv_showAxis = true;
+    var priv_showAxis = false;
     $scope.showAxis = function () {
         var axis = d3.selectAll(".axis");
         priv_showAxis = !priv_showAxis;
         axis.classed("show", priv_showAxis);
+        
+        // Redraw the circles
+        var margin = { top: 20, left: 50 },
+            width = circle_canvas_width - margin.left,
+            height = circle_canvas_height - margin.top;
+
+        var x = d3.scale.ordinal()
+            .domain(team_group_data)
+            .rangeBands([0, width])
+        ;
+        
+        var y = d3.scale.linear()
+            .domain([min_fifa_rank_rel, max_fifa_rank_rel])
+            .range([height, 0])
+        ;
+        
+        d3.select("#circles")
+            .selectAll("circle")
+            .data(team_data)
+            .transition()
+            .attr("cx", function(d) {
+                var new_x = x(d.team_group) + margin.left * 2 + 6;
+                $log.log("new_x: " + new_x + "; for ", this);
+                return new_x;
+            })
+            .attr("cy", function(d) { return y(d.fifa_rank_rel) - 20; })
+        ;
+        
     };
     
     
@@ -221,18 +259,22 @@ angular.module("d3jsapp")
         $log.log("Axis called.");
         var margin = { top: 20, left: 50 },
             width = circle_canvas_width - margin.left,
-            height = circle_canvas_height - margin.top,
-            x = d3.scale.linear()
-                .domain([-width / 2, width / 2])
-                .range([0, width]);
+            height = circle_canvas_height - margin.top;
+        
+        var x = d3.scale.ordinal()
+            .domain(team_group_data)
+            .rangeBands([0, width])
+        ;
         
         var xAxis = d3.svg.axis()
             .scale(x)
             .orient("bottom")
-            .tickSize(-height);
+            .tickValues(team_group_data)
+            .tickSize(-height)
+        ;
         
         var y = d3.scale.linear()
-            .domain([-height / 2, height / 2])
+            .domain([min_fifa_rank_rel, max_fifa_rank_rel])
             .range([height, 0]);
         
         var yAxis = d3.svg.axis()
@@ -244,20 +286,22 @@ angular.module("d3jsapp")
         var axis_g = d3.select("#team-chart")
             .append("g")
             .attr("transform", "translate(" + margin.left + ",-" + margin.top + ")")
+        ;
 
         axis_g
             .append("g")
             .attr("transform", "translate(0," + height + ")")
             .attr("id", "xaxis")    
             .attr("class", "axis")
-            .call(xAxis);
+            .call(xAxis)
+        ;
         
         axis_g
             .append("g")
             .attr("id", "yaxis")
             .attr("class", "y axis")
-            .call(yAxis);
-    
+            .call(yAxis)
+        ;
     }
     
     

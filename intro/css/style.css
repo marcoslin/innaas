@@ -53,7 +53,7 @@ circle.team:hover {
 
 .axis.show path,
 .axis.show line {
-    stroke: #fff;
+    stroke: #CCC;
 }
 .axis.show text {
     display: inherit;
