@@ -20,13 +20,13 @@ circle.team:hover {
 }
 
 
-#flag-canvas {
+#flag-group {
     position: relative;
     height: 50px;
     width: 100%;
 }
 
-#circle-canvas {
+#circle-group {
     height: 550px;
     width: 100%;
 }

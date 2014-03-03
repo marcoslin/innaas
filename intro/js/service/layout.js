@@ -1,0 +1,324 @@
+(function () {
+    var app = angular.module("d3jsapp");
+
+    /*
+     * Agregator Utility
+     */
+    function Aggregator() {
+        var priv_holder = { max: {}, min: {}, distinct: {} },
+            priv_dist_holder = {};
+        
+        // MAX
+        this.setMax = function (name, input) {
+            var check_val = priv_holder["max"][name];
+            if (typeof input === "undefined") {
+                return;
+            } else if (typeof check_val === "undefined") {
+                priv_holder["max"][name] = input;
+            } else if (input > check_val) {
+                priv_holder["max"][name] = input;
+            }
+        };
+        this.getMax = function (name) { return priv_holder["max"][name]; };
+        
+        // MIN
+        this.setMin = function (name, input) {
+            var check_val = priv_holder["min"][name];
+            if (typeof input==="undefined") {
+                return;
+            } else if (typeof check_val==="undefined") {
+                priv_holder["min"][name] = input;
+            } else if (input < check_val) {
+                priv_holder["min"][name] = input;
+            }
+        };
+        this.getMin = function (name) { return priv_holder["min"][name]; };
+        
+        // DISTINCT
+        this.setDistinct = function (name, input) {
+            var holder = priv_dist_holder[name];
+            if (typeof input==="undefined") {
+                return;
+            } else {
+                // Variable initialization
+                var dist_val = priv_holder["distinct"][name],
+                    check_val = priv_dist_holder[name];
+                if (typeof dist_val==="undefined") {
+                    priv_holder["distinct"][name] = [];
+                }
+                if (typeof check_val==="undefined") {
+                    priv_dist_holder[name] = {};
+                }
+                
+                // Distinct Check
+                if ( !priv_dist_holder[name].hasOwnProperty(input) ) {
+                    priv_dist_holder[name][input] = true;
+                    priv_holder["distinct"][name].push(input);
+                }
+            }
+        };
+        this.getDistinct = function (name) { return priv_holder["distinct"][name]; };
+    
+    }
+    
+    /*
+     * SERVICE: Layout
+     */
+    app.service('Layout', ['$timeout', '$interval', '$log', function ($timeout, $interval, $log) {
+        var that = this,
+            priv_data,
+            priv_canvas, priv_margin, priv_width, priv_height,
+            priv_team_groups,
+            priv_scaleRank, priv_scaleRankRel, priv_scaleGroup,
+            priv_color = d3.scale.category10();
+        
+        /**
+         * Initialize layout manager with:
+         * data: input data to be used
+         * canvas: sizer of the drawable area
+         * margin: 4 margins around the canvas 
+         */
+        this.initialize = function (data, canvas, margin) {
+            priv_data = data;
+            priv_canvas = canvas;
+            priv_margin = margin;
+            priv_width = priv_canvas.width - (priv_margin.left + priv_margin.right);
+            priv_height = priv_canvas.height - (priv_margin.top + priv_margin.bottom);
+            
+            var agg = new Aggregator();
+            angular.forEach(data, function (entry) {
+                agg.setMax("fifa_rank", entry.fifa_rank);
+                agg.setMax("fifa_rank_rel", entry.fifa_rank_rel);
+                agg.setMin("fifa_rank_rel", entry.fifa_rank_rel);
+                agg.setDistinct("team_group", entry.team_group);
+            });
+            
+            $log.log("max fifa_rank: ", agg.getMax("fifa_rank"));
+            $log.log("min fifa_rank_rel: ", agg.getMin("fifa_rank_rel"));
+            $log.log("max fifa_rank_rel: ", agg.getMax("fifa_rank_rel"));
+            $log.log("distinct team_group: ", agg.getDistinct("team_group"));
+            
+            priv_team_groups = agg.getDistinct("team_group");
+            
+            // Normalize ranking data to a value from 0 to 50, with upper padding of 10
+            priv_scaleRank = d3.scale.linear()
+                .domain([agg.getMax("fifa_rank")+10, 0])
+                .range([0, 5000])
+            ;
+            
+            // Scale for fifa_rank_rel for Y-Axis
+            priv_scaleRankRel = d3.scale.linear()
+                .domain([agg.getMin("fifa_rank_rel"), agg.getMax("fifa_rank_rel")])
+                .range([0, priv_height])
+            ;
+            
+            // Ordinal group for X-Axis
+            priv_scaleGroup = d3.scale.ordinal()
+                .domain(priv_team_groups)
+                .rangePoints([0, priv_width], 1)
+            ;
+            $log.log("priv_scaleGroup: ", priv_scaleGroup);
+        };
+        
+        
+        /*
+         * displayAxis
+         */
+        function displayAxis(toShow) {
+            var axis = d3.selectAll(".axis");
+            axis.classed("show", toShow);
+        }
+        
+        
+        /**
+         * LAYOUT Flag Grid
+         */
+        var priv_flagGrid_orig_position;
+        this.flagGrid = function () {
+            var grid = d3.layout.grid()
+                .bands()
+                .nodeSize([4, 8])
+                .rows(2)
+                .cols(16)
+                .padding([55, 17]);
+            
+            var flag_divs = d3.select("#flag-group").selectAll("div");
+            
+            priv_flagGrid_orig_position = {};
+            
+            flag_divs
+                .data(grid(priv_data))
+                .transition()
+                .attr("style", function (d) {
+                    var pos = "top: " + d.y + "px; left: " + d.x + "px;"
+                    // Store original position
+                    priv_flagGrid_orig_position[d.team_idclass] = pos;
+                    return pos;
+                })
+            ;
+        };
+        
+        
+        /**
+         * LAYOUT Flag Circle
+         */
+        this.flagCircle = function () {            
+            var flag_divs = d3.select("#flag-group").selectAll("div");
+            flag_divs
+                .data(priv_data)
+                .transition()
+                .attr("style", function (d) {
+                    var circle = d3.select("#" + d.circle_idclass),
+                        x = parseFloat(circle.attr("cx")),
+                        y = parseFloat(circle.attr("cy")) + priv_margin.bottom;
+                    //$log.log("circle: ", circle.attr("cy"));
+                    return "top: " + y + "px; left: " + x + "px;"
+                })
+            ;
+        };
+        
+        /**
+         * LAYOUT Circle Force
+         */
+        function pullCircleToCenter () {
+            return function (d) {
+                var targetX = priv_width / 2;
+                var targetY = priv_height / 2;
+                d.x += (targetX - d.x) * 0.1;
+                d.y += (targetY - d.y) * 0.1;
+            }
+        }
+        
+        function expandCircle(circles, force) {            
+            // Generate the effect that centralize bubbles in the center of the canvas
+            force
+                .gravity(2)
+                .friction(0.4)
+                .on("tick", function(e) {
+                    circles
+                    .each(pullCircleToCenter())
+                    .attr("cx", function(d) { return d.x; })
+                    .attr("cy", function(d) { return d.y; });
+                })
+            .start();
+            
+            for (var i=0; i<100; i++) force.tick();
+            
+            
+            $timeout(function () {
+                force.stop();
+                force
+                    .gravity(0.6) //0.6
+                    .friction(0.2) // 0.2
+                    .on("tick", function(e){
+                        circles
+                            .attr("cx", function(d) { return d.x; })
+                            .attr("cy", function(d) { return d.y; });
+                    })
+                .start();
+            }, 700);
+        }
+        
+        this.circleForce = function () {
+            var circles = d3.select("#circle-group").selectAll("circle"),
+                force = d3.layout.force()
+                    .nodes(priv_data)
+                    .gravity(0.8)
+                    .friction(0.3)
+                    .charge(function (d) {
+                        // Negative multiple of radius
+                        return Math.sqrt(priv_scaleRank(d.fifa_rank)/Math.PI) * -120;
+                        // return priv_scaleRank(d.fifa_rank) * -120;
+                    })
+                    .size([priv_width, priv_height]);
+            
+            force.start();
+            
+            displayAxis(false);
+            that.flagGrid();
+                
+            circles
+                .data(priv_data)
+                .transition()
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; })
+            ;
+            
+            expandCircle(circles, force);
+        };
+        
+        /**
+         * LAYOUT Circle XY
+         */
+        this.circleXY = function () {
+            var circles = d3.select("#circle-group").selectAll("circle"),
+                x = priv_scaleGroup,
+                y = priv_scaleRankRel;
+            displayAxis(true);
+            
+            circles
+                .data(priv_data)
+                .transition()
+                .each("end", function (d) {
+                    // Put the flag to near the center of the circle
+                    // Padding to set flag close to the center of the circle
+                    var circle = d3.select(this),
+                        flag = d3.select("#" + d.team_idclass),
+                        padding_x = -22, padding_y = -10,
+                        x = parseFloat(circle.attr("cx")) + padding_x,
+                        y = parseFloat(circle.attr("cy")) + priv_margin.bottom + padding_y;
+                    //$log.log("circle: ", circle.attr("cy"));
+                    flag.attr("style", "top: " + y + "px; left: " + x + "px;");
+                })
+                .attr("cx", function(d) {
+                    return x(d.team_group) + priv_margin.left;
+                })
+                .attr("cy", function(d) {
+                    return y(d.fifa_rank_rel);
+                })
+            ;
+        };
+        
+        /**
+         * Return Canvas
+         */
+        this.width = function () {
+            return priv_width;
+        };
+        this.height = function () {
+            return priv_height;
+        };
+        this.margin = function (side) {
+            return priv_margin[side];
+        };
+        
+        /**
+         * Return Scales
+         */
+        this.scaleRank = function () {
+            return priv_scaleRank;
+        };
+        this.scaleRankRel = function () {
+            return priv_scaleRankRel;
+        };
+        this.scaleGroup = function () {
+            return priv_scaleGroup;
+        };
+        
+        /**
+         * Return Formatter
+         */
+        this.color = function () {
+            return priv_color;
+        };
+        
+        /**
+         * Return Data
+         */
+        this.team_groups = function () {
+            return priv_team_groups;
+        };
+        
+    }]);
+})();
+
