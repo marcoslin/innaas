@@ -64,13 +64,14 @@
     /*
      * SERVICE: Layout
      */
-    app.service('Layout', ['$timeout', '$interval', '$log', function ($timeout, $interval, $log) {
+    app.service('Layout', ['$timeout', '$interval', '$q', '$log', function ($timeout, $interval, $q, $log) {
         var that = this,
             priv_data,
             priv_canvas, priv_margin, priv_width, priv_height,
             priv_team_groups,
             priv_scaleRank, priv_scaleRankRel, priv_scaleGroup,
-            priv_color = d3.scale.category10();
+            priv_color = d3.scale.category10(),
+            priv_force;
         
         /**
          * Initialize layout manager with:
@@ -158,25 +159,6 @@
             ;
         };
         
-        
-        /**
-         * LAYOUT Flag Circle
-         */
-        this.flagCircle = function () {            
-            var flag_divs = d3.select("#flag-group").selectAll("div");
-            flag_divs
-                .data(priv_data)
-                .transition()
-                .attr("style", function (d) {
-                    var circle = d3.select("#" + d.circle_idclass),
-                        x = parseFloat(circle.attr("cx")),
-                        y = parseFloat(circle.attr("cy")) + priv_margin.bottom;
-                    //$log.log("circle: ", circle.attr("cy"));
-                    return "top: " + y + "px; left: " + x + "px;"
-                })
-            ;
-        };
-        
         /**
          * LAYOUT Circle Force
          */
@@ -216,12 +198,16 @@
                             .attr("cy", function(d) { return d.y; });
                     })
                 .start();
-            }, 700);
+            }, 300);
         }
         
         this.circleForce = function () {
-            var circles = d3.select("#circle-group").selectAll("circle"),
-                force = d3.layout.force()
+            var d = $q.defer(),
+                circles = d3.select("#circle-group").selectAll("circle");
+            
+            // Only create force once
+            if (!priv_force) {
+                priv_force = d3.layout.force()
                     .nodes(priv_data)
                     .gravity(0.8)
                     .friction(0.3)
@@ -232,8 +218,9 @@
                     })
                     .size([priv_width, priv_height]);
             
-            force.start();
-            
+                priv_force.start();
+            }
+
             displayAxis(false);
             that.flagGrid();
                 
@@ -244,7 +231,31 @@
                 .attr("cy", function(d) { return d.y; })
             ;
             
-            expandCircle(circles, force);
+            expandCircle(circles, priv_force);
+            
+            var inter = $interval(function () {
+                $log.debug("[Layout] .circleForce waiting for force animation to complete with alpha of: ", priv_force.alpha());
+                if (priv_force.alpha() === 0) {
+                    $interval.cancel(inter);
+                    inter = undefined;
+                    d.resolve();
+                }
+            }, 700, 7);
+            
+            // As interval does not raiser error, need to check or the promise will be stuck forever
+            $timeout(function () {
+                if (inter) {
+                    $log.error("[Layout.circleForce] $interval expired without detecting the end of animation");
+                    $log.debug("[Layout.circleForce] forcing resolve");
+                    // Force resolve anyways
+                    d.resolve();
+                } else {
+                    $log.debug("[Layout.circleForce] $interval clear successfully");
+                }
+                
+            }, 4900 + 200);
+            
+            return d.promise;
         };
         
         /**

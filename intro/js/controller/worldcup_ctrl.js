@@ -1,3 +1,9 @@
+/**
+ToDo:
+1. Add mouse over
+2. Why the reset of circles when circleForce is called twice in sequence?
+*/
+
 angular.module("d3jsapp")
 .controller('WorldcupController', ['$scope', 'Team', 'Layout', '$timeout', '$log', function ($scope, Team, Layout, $timeout, $log) {
     // Create the 3 svg group needed
@@ -32,8 +38,8 @@ angular.module("d3jsapp")
         
         // Default Layout
         Layout.flagGrid();
-        Layout.circleForce();
-        
+        $scope.circleForce();
+
         //$scope.showAxis();
         $log.debug("[WorldcupController] draw completed");
     })
@@ -42,7 +48,12 @@ angular.module("d3jsapp")
      * EXPOSE Layout
      */
     $scope.flagGrid = Layout.flagGrid;
-    $scope.circleForce = Layout.circleForce;
+    $scope.circleForce = function () {
+        $scope.disable_axisLayout = true;
+        Layout.circleForce().then(function () {
+            $scope.disable_axisLayout = false;
+        });
+    };
     $scope.circleXY = Layout.circleXY;
     
     
