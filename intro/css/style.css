@@ -2,6 +2,23 @@
  * WORLDCUP
  */
 
+header h1 a {
+    text-decoration: none;
+}
+
+header {
+    display: table;
+}
+
+header span {
+    display: table-cell;
+}
+
+header span button {
+    margin-left: 20px;
+    vertical-align: middle;
+}
+
 #container {
     width: 950px;
     height: 600px;
