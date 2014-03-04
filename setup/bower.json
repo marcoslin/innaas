@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "homepage": "https://github.com/marcoslin/innaas",
     "authors": [
-        "Marcos Lin <linm.linmair@ebacimail.com>"
+        "Marcos Lin <marcos.lin@farport.co.uk>"
     ],
     "description": "Intro to d3.js",
     "main": "index.html",
@@ -22,8 +22,7 @@
     "dependencies": {
         "d3js": "*",
         "d3-grid": "0.1.1",
-        "angular": "1.2.13",
-        "angular-route": "1.2.13",
-        "angular-resource": "1.2.13"
+        "angular": "1.2.14",
+        "angular-route": "1.2.14"
     }
 }

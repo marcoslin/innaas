@@ -15,7 +15,7 @@ header span {
 }
 
 header span button {
-    margin-left: 20px;
+    margin-left: 10px;
     vertical-align: middle;
 }
 
@@ -35,7 +35,6 @@ circle.team:hover {
     stroke: #fff503;
     stroke-width: 8px;
 }
-
 
 #flag-group {
     position: relative;

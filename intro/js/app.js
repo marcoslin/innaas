@@ -1,6 +1,6 @@
 (function () {
 
-    var app = angular.module("d3jsapp", ['ngRoute','ngResource']);
+    var app = angular.module("d3jsapp", ['ngRoute']);
 
     app.config(['$routeProvider', function ($routeProvider) {
         $routeProvider
