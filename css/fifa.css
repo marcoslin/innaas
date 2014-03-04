@@ -9,7 +9,7 @@
     vertical-align:middle;
     width:19px;height:13px;
     overflow:hidden;
-    background:transparent url(/images/flagsp.png) no-repeat scroll;
+    background:transparent url(../images/flagsp.png) no-repeat scroll;
     border: 1px solid #CCC;
 }
 
