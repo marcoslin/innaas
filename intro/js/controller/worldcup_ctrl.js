@@ -1,9 +1,3 @@
-/**
-ToDo:
-1. Add mouse over
-2. Why the reset of circles when circleForce is called twice in sequence?
-*/
-
 angular.module("d3jsapp")
 .controller('WorldcupController', ['$scope', 'Team', 'Layout', '$timeout', '$log', function ($scope, Team, Layout, $timeout, $log) {
     // Create the 3 svg group needed
