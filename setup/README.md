@@ -11,7 +11,7 @@ innaas/gh-pages/  <- Clone of the github `gh-pages` branch
 
 
 ## Installation
-You must have (node.js)[http://nodejs.org/] installed in order to use this setup.
+You must have [node.js](http://nodejs.org/) installed in order to use this setup.
 
 
 ## Installation
