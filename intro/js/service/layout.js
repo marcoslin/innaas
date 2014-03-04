@@ -72,7 +72,8 @@
             priv_team_groups,
             priv_scaleRank, priv_scaleRankRel, priv_scaleGroup,
             priv_color = d3.scale.category10(),
-            priv_force;
+            priv_force,
+            priv_current_layout;
         
         /**
          * Initialize layout manager with:
@@ -215,6 +216,9 @@
             var d = $q.defer(),
                 circles = d3.select("#circle-group").selectAll("circle");
             
+            // Set the current layout
+            priv_current_layout = "circleForce";
+            
             // Only create force once
             if (typeof priv_force === "undefined") {
                 priv_force = d3.layout.force()
@@ -280,6 +284,9 @@
             var circles = d3.select("#circle-group").selectAll("circle"),
                 x = priv_scaleGroup,
                 y = priv_scaleRankRel;
+            
+            // Set the current layout
+            priv_current_layout = "circleXY";
             
             // Stop force animation if still in progress
             if (priv_force.alpha() !== 0) {
@@ -354,11 +361,17 @@
         };
         
         /**
-         * Return Data
+         * Other properties
          */
+        this.current_layout = function () {
+            return priv_current_layout;
+        };
+        
         this.team_groups = function () {
             return priv_team_groups;
         };
+        
+        
         
     }]);
 })();

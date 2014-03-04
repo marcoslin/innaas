@@ -100,6 +100,16 @@ angular.module("d3jsapp")
      *       <span class="team-code">COL</span>
      *   </div>
      */
+    function teamMouseOver(d, i) {
+        var idclass = d.circle_idclass,
+            circle = d3.select("#" + idclass);
+        circle.classed("highlight", true);
+    }
+    function teamMouseOut(d, i) {
+        var idclass = d.circle_idclass,
+            circle = d3.select("#" + idclass);
+        circle.classed("highlight", false);
+    }
     function initializeFlag(data) {
         var team_flag = flag_group
             .selectAll("div")
@@ -109,8 +119,8 @@ angular.module("d3jsapp")
             .attr("class", "team")
             .attr("title", function (d) { return d.team_name; })
             .attr("id", function (d) { return d.team_idclass; })
-            //.on("mouseover", teamMouseOver)
-            //.on("mouseout", teamMouseOut)
+            .on("mouseover", teamMouseOver)
+            .on("mouseout", teamMouseOut)
         ;
         
         team_flag
@@ -131,7 +141,33 @@ angular.module("d3jsapp")
     /**
      * Initialize circle setting the FIFA rank as area of the circle, with help
      * from rankScale.
-     */ 
+     */
+    function circleMouseOver (d, i) {
+        // Move the flag closer to the circle, only if the layout is circleForce
+        $log.log("circleMouseOver: ", Layout.current_layout());
+        if (Layout.current_layout() === "circleForce") {
+            var id_name = d.team_idclass,
+                circle = d3.select(this),
+                x = circle.attr("cx"),
+                y = parseFloat(circle.attr("cy")) + Layout.margin("top") - 10;
+
+            d3.select("#" + id_name)
+                .transition()
+                .duration(500)
+                .attr("style", "top: " + y + "px; left: " + x + "px;");
+        }
+    }
+    function circleMouseOut (d, i) {
+        // Return the flag to original position
+        if (Layout.current_layout() === "circleForce") {
+            var id_name = d.team_idclass;
+            d3.select("#" + id_name)
+                .transition()
+                .duration(500)
+                .attr("style", d.orig_position)
+            ;
+        }
+    }
     function initializeCircle(data) {
         var circles = circle_group.selectAll("circle"),
             rankScale = Layout.scaleRank(),
@@ -152,8 +188,8 @@ angular.module("d3jsapp")
             .attr("fill", function (d) {
                 return color(d.team_group);
             })
-            //.on("mouseover", circleMouseOver)
-            //.on("mouseout", circleMouseOut)
+            .on("mouseover", circleMouseOver)
+            .on("mouseout", circleMouseOut)
             .append("title")
             .text(function (d) {
                 return d.team_name;
