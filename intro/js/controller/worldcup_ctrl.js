@@ -33,7 +33,7 @@ angular.module("d3jsapp")
           
         // Start drawing
         initializeAxis();
-        initializeTeam(data);
+        initializeFlag(data);
         initializeCircle(data);
         
         // Default Layout
@@ -53,15 +53,13 @@ angular.module("d3jsapp")
     
     
     /**
-     * DRAWING
+     * AXIS: create the axis using the team group on the X axis and FIFA relative ranking
+     * as Y axis.
+     *   - Axis are identified using id of `xaxis` and `yaxis` and has a css class of `axis`
+     *   - Transform is needed to give it some space between the axis and the canvas.  For y
+     *     axis, as the flags are drawn using #flag-group div, it is already down-shifted so
+     *     y is set to zero.
      */
-    var priv_showAxis = false;
-    $scope.showAxis = function () {
-        var axis = d3.selectAll(".axis");
-        priv_showAxis = !priv_showAxis;
-        axis.classed("show", priv_showAxis);
-    }
-    
     function initializeAxis() {
         var xAxis = d3.svg.axis()
             .scale(Layout.scaleGroup())
@@ -78,7 +76,7 @@ angular.module("d3jsapp")
         ;
         
         var tx = Layout.margin('left'),
-            ty = Layout.margin('top') - Layout.margin('bottom');
+            ty = 0;
         axis_group
             .attr("transform", "translate(" + tx + "," + ty + ")");
         
@@ -95,7 +93,14 @@ angular.module("d3jsapp")
         ;
     }
     
-    function initializeTeam(data) {
+    /**
+     * Initialize Flag: create flag divs as 0,0 position using following structure
+     *   <div class="team" title="Colombia" id="team-col">
+     *       <span class="flagsp flagsp_col"></span>
+     *       <span class="team-code">COL</span>
+     *   </div>
+     */
+    function initializeFlag(data) {
         var team_flag = flag_group
             .selectAll("div")
             .data(data)
@@ -123,6 +128,10 @@ angular.module("d3jsapp")
         ;
     }
     
+    /**
+     * Initialize circle setting the FIFA rank as area of the circle, with help
+     * from rankScale.
+     */ 
     function initializeCircle(data) {
         var circles = circle_group.selectAll("circle"),
             rankScale = Layout.scaleRank(),
@@ -137,9 +146,8 @@ angular.module("d3jsapp")
             .attr("cx", 0)
             .attr("cy", 0)
             .attr("r", function (d) {
-                // Ranking should be the area of the circle
+                // Return r as to produce a circle with area of FIFA Rank
                 return Math.sqrt(rankScale(d.fifa_rank)/Math.PI)
-                //return rankScale(d.fifa_rank)
             })
             .attr("fill", function (d) {
                 return color(d.team_group);
@@ -153,9 +161,6 @@ angular.module("d3jsapp")
         ;
     
     }
-    
-    
-    
-    
+
     
 }]);

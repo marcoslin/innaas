@@ -2,7 +2,8 @@
     var app = angular.module("d3jsapp");
 
     /*
-     * Agregator Utility
+     * Agregator Utility:  Tool to find max, min and distinct on a single loop
+     * of the incoming data.
      */
     function Aggregator() {
         var priv_holder = { max: {}, min: {}, distinct: {} },
@@ -75,9 +76,11 @@
         
         /**
          * Initialize layout manager with:
-         * data: input data to be used
-         * canvas: sizer of the drawable area
-         * margin: 4 margins around the canvas 
+         *   data: input data to be used
+         *   canvas: sizer of the drawable area
+         *   margin: 4 margins around the canvas
+         *
+         *  Create scale needed using the input data
          */
         this.initialize = function (data, canvas, margin) {
             priv_data = data;
@@ -86,6 +89,7 @@
             priv_width = priv_canvas.width - (priv_margin.left + priv_margin.right);
             priv_height = priv_canvas.height - (priv_margin.top + priv_margin.bottom);
             
+            // Find aggegate needed mostly by D3 scale
             var agg = new Aggregator();
             angular.forEach(data, function (entry) {
                 agg.setMax("fifa_rank", entry.fifa_rank);
@@ -93,11 +97,6 @@
                 agg.setMin("fifa_rank_rel", entry.fifa_rank_rel);
                 agg.setDistinct("team_group", entry.team_group);
             });
-            
-            $log.log("max fifa_rank: ", agg.getMax("fifa_rank"));
-            $log.log("min fifa_rank_rel: ", agg.getMin("fifa_rank_rel"));
-            $log.log("max fifa_rank_rel: ", agg.getMax("fifa_rank_rel"));
-            $log.log("distinct team_group: ", agg.getDistinct("team_group"));
             
             priv_team_groups = agg.getDistinct("team_group");
             
@@ -118,12 +117,18 @@
                 .domain(priv_team_groups)
                 .rangePoints([0, priv_width], 1)
             ;
-            $log.log("priv_scaleGroup: ", priv_scaleGroup);
+            
+            /*
+            $log.debug("[Layout.initialize] max fifa_rank: ", agg.getMax("fifa_rank"));
+            $log.debug("[Layout.initialize] min fifa_rank_rel: ", agg.getMin("fifa_rank_rel"));
+            $log.debug("[Layout.initialize] max fifa_rank_rel: ", agg.getMax("fifa_rank_rel"));
+            $log.debug("[Layout.initialize] distinct team_group: ", agg.getDistinct("team_group"));
+            */
         };
         
         
         /*
-         * displayAxis
+         * PRIVATE METHOD: Show or hide Axis
          */
         function displayAxis(toShow) {
             var axis = d3.selectAll(".axis");
@@ -132,9 +137,10 @@
         
         
         /**
-         * LAYOUT Flag Grid
+         * LAYOUT Flag Grid: layout the flags using simple grid layout and add
+         * a `orig_position` data attribute storing the initial location of the
+         * flag allow flags to return to original position.
          */
-        var priv_flagGrid_orig_position;
         this.flagGrid = function () {
             var grid = d3.layout.grid()
                 .bands()
@@ -143,35 +149,38 @@
                 .cols(16)
                 .padding([55, 17]);
             
-            var flag_divs = d3.select("#flag-group").selectAll("div");
-            
-            priv_flagGrid_orig_position = {};
+            var orig_position,
+                flag_divs = d3.select("#flag-group").selectAll("div");
             
             flag_divs
                 .data(grid(priv_data))
                 .transition()
                 .attr("style", function (d) {
                     var pos = "top: " + d.y + "px; left: " + d.x + "px;"
-                    // Store original position
-                    priv_flagGrid_orig_position[d.team_idclass] = pos;
+                    d.orig_position = pos;
                     return pos;
                 })
             ;
         };
         
         /**
-         * LAYOUT Circle Force
+         * LAYOUT Circle Force: Layout animiation built from 3 key pieces:
+         *   - pullCircleToCenter(): Pull the circle toward the center of the canvas
+         *   - expandCircle(): Call pullCircleToCenter() and then expand the circles
+         *     by decreasing the gravity
+         *   - circleForce(): Main method that will create the force and set the starting
+         *     circle positions.
          */
-        function pullCircleToCenter () {
-            return function (d) {
-                var targetX = priv_width / 2;
-                var targetY = priv_height / 2;
-                d.x += (targetX - d.x) * 0.1;
-                d.y += (targetY - d.y) * 0.1;
+        function expandCircle(circles, force) {
+            // pullCircleToCenter is only used by expandCircle
+            function pullCircleToCenter () {
+                return function (d) {
+                    var targetX = priv_width / 2;
+                    var targetY = priv_height / 2;
+                    d.x += (targetX - d.x) * 0.1;
+                    d.y += (targetY - d.y) * 0.1;
+                }
             }
-        }
-        
-        function expandCircle(circles, force) {            
             // Generate the effect that centralize bubbles in the center of the canvas
             force
                 .gravity(2)
@@ -207,24 +216,29 @@
                 circles = d3.select("#circle-group").selectAll("circle");
             
             // Only create force once
-            if (!priv_force) {
+            if (typeof priv_force === "undefined") {
                 priv_force = d3.layout.force()
                     .nodes(priv_data)
                     .gravity(0.8)
                     .friction(0.3)
                     .charge(function (d) {
                         // Negative multiple of radius
+                        //$log.log("radius: " + d.r + ");
                         return Math.sqrt(priv_scaleRank(d.fifa_rank)/Math.PI) * -120;
-                        // return priv_scaleRank(d.fifa_rank) * -120;
                     })
-                    .size([priv_width, priv_height]);
-            
-                priv_force.start();
+                    .size([priv_canvas.width, priv_canvas.height])
+                    .start()
+                ;
             }
-
+            
             displayAxis(false);
             that.flagGrid();
-                
+            
+            /*
+            A bizzard bug in the setting of cy below.  The logging of d shows the y property set
+            but d.y return 0.  If tick is called in force, the py get updated but y continues to
+            be zeo.  Leaving this as it only happens when priv_force is created.
+            */
             circles
                 .data(priv_data)
                 .transition()
@@ -260,7 +274,7 @@
         };
         
         /**
-         * LAYOUT Circle XY
+         * LAYOUT Circle XY: 
          */
         this.circleXY = function () {
             var circles = d3.select("#circle-group").selectAll("circle"),
@@ -278,14 +292,17 @@
                 .data(priv_data)
                 .transition()
                 .each("end", function (d) {
-                    // Put the flag to near the center of the circle
-                    // Padding to set flag close to the center of the circle
+                    /*
+                    `end` event fires when animation of the circle stops, and thus the
+                    xy position is known.  Use this info to place the flag in the center
+                    of the circle.  However, as position of the flag using done at top/left,
+                    hard-coded padding is needed to nudge the flag toward the center.
+                    */
                     var circle = d3.select(this),
                         flag = d3.select("#" + d.team_idclass),
                         padding_x = -22, padding_y = -10,
                         x = parseFloat(circle.attr("cx")) + padding_x,
                         y = parseFloat(circle.attr("cy")) + priv_margin.bottom + padding_y;
-                    //$log.log("circle: ", circle.attr("cy"));
                     flag.attr("style", "top: " + y + "px; left: " + x + "px;");
                 })
                 .attr("cx", function(d) {
@@ -298,8 +315,14 @@
         };
         
         /**
-         * Return Canvas
+         * Canvas Related Properties
          */
+        this.canvas_width = function () {
+            return priv_canvas.width;
+        };
+        this.canvas_height = function () {
+            return priv_canvas.height;
+        };
         this.width = function () {
             return priv_width;
         };
@@ -311,7 +334,7 @@
         };
         
         /**
-         * Return Scales
+         * D3 Scale related properties
          */
         this.scaleRank = function () {
             return priv_scaleRank;
